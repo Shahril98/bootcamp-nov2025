@@ -1,23 +1,36 @@
 <x-layouts.app>
+<style>
+    [x-cloak] { display: none !important; }
+</style>
 
-    <div x-data="{
-        showEditModal: {{ isset($editingExpense) ? 'true' : 'false' }},
-        editingExpense: {{ isset($editingExpense) ? $editingExpense : '{}' }},
-        editUrl: '{{ isset($editingExpense) ? route('expenses.update', $editingExpense->id) : '' }}',
-        init() {
-            if (this.editingExpense.spent_at) {
-                this.editingExpense.spent_at = this.editingExpense.spent_at.split('T')[0];
+    <script>
+        function expensesComponent() {
+            return {
+                // safe defaults
+                showEditModal: false,
+                editingExpense: {},
+                editUrl: '',
+                init() {
+                    if (this.editingExpense && this.editingExpense.spent_at) {
+                        this.editingExpense.spent_at = this.editingExpense.spent_at.split('T')[0];
+                    }
+                },
+                        openEditModal(expense) {
+                            // Debug: log incoming object
+                            console.log('openEditModal called with', expense);
+                            this.editingExpense = expense || {};
+                            if (this.editingExpense.spent_at) {
+                                this.editingExpense.spent_at = this.editingExpense.spent_at.split('T')[0];
+                            }
+                            // Build URL only when id present
+                            this.editUrl = this.editingExpense.id ? '/expense/' + this.editingExpense.id : '';
+                            this.showEditModal = true;
+                        }
             }
-        },
-        openEditModal(expense) {
-            this.editingExpense = expense;
-            if (this.editingExpense.spent_at) {
-                this.editingExpense.spent_at = this.editingExpense.spent_at.split('T')[0];
-            }
-            this.editUrl = '{{ route('expenses.update', 'ID_PLACEHOLDER') }}'.replace('ID_PLACEHOLDER', expense.id);
-            this.showEditModal = true;
         }
-    }">
+    </script>
+
+    <div x-data="expensesComponent()">
         {{-- Success Message --}}
         @if (session('success'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
@@ -62,7 +75,7 @@
                     class="w-full mb-4 p-2 border border-gray-300 rounded">
                 <textarea name="notes" placeholder="Notes"
                     class="w-full mb-4 p-2 border border-gray-300 rounded"></textarea>
-                <button class="bg-blue-500 text-white px-4 py type=" submit">Save </button>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
             </form>
 
             @foreach ($expenses as $expense)
@@ -75,23 +88,31 @@
                     <p>Notes: {{ $expense->notes }}</p>
                 </div>
 
-                <form action="{{route('expenses.destroy', $expense)}}" method="POST" class="mt-2">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
-                </form>
+                <div class="mt-2 flex items-center">
+                    <form action="{{route('expenses.destroy', $expense)}}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="bg-blue-500 text-white px-2 py-2 rounded">Delete</button>
+                    </form>
 
-                <button @click="openEditModal({{ $expense }})" class="bg-blue-500 text-white px-4 py-2 rounded">
-                    Edit
-                </button>
+                    <button @click="openEditModal({{ $expense }})" class="ml-2 bg-blue-500 text-white px-2 py-2 rounded">
+                        Edit
+                    </button>
+                </div>
 
             @endforeach
 
         </div>
 
-        <!-- Edit Modal -->
-        <div x-show="showEditModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+        {{-- <!-- Edit Modal -->
+        <div x-cloak x-show="showEditModal"  class="fixed inset-0 z-50 overflow-y-auto"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <!-- Debug panel (visible when modal is open) -->
+            <div x-show="showEditModal" class="fixed left-4 top-4 z-60 bg-black bg-opacity-60 text-white text-xs p-2 rounded" style="max-width:320px;">
+                <div><strong>Debug</strong></div>
+                <div>showEditModal: <span x-text="String(showEditModal)"></span></div>
+                <div style="word-break:break-word;">editingExpense: <pre x-text="JSON.stringify(editingExpense)"></pre></div>
+            </div>
             <div class="flex items-center justify-center min-h-screen px-4 text-center">
                 <div x-show="showEditModal" x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -106,8 +127,9 @@
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full max-w-md">
-                    <form :action="editUrl" method="POST">
+                    class="inline-block bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full max-w-md"
+                    @click.stop>
+                    <form :action="editUrl || '#'" method="POST">
                         @csrf
                         @method('PATCH')
                         <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -130,7 +152,7 @@
                             </div>
                         </div>
                         <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="submit" @click="showEditModal = false"
+                            <button type="submit"
                                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
                                 Update
                             </button>
@@ -142,7 +164,73 @@
                     </form>
                 </div>
             </div>
+        </div> --}}
+        <!-- Edit Modal -->
+        <div x-cloak
+            x-show="showEditModal"
+            class="fixed inset-0 z-50 overflow-y-auto"
+            @keydown.escape.window="showEditModal = false">
+
+            <div class="flex items-center justify-center min-h-screen px-4 text-center">
+
+                <!-- Backdrop -->
+                <div x-show="showEditModal"
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75"
+                    @click="showEditModal = false">
+                </div>
+
+                <!-- Modal -->
+                <div x-show="showEditModal"
+                    x-transition
+                    class="inline-block bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md relative">
+
+                    <form :action="editUrl || '#'" method="POST">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="px-4 pt-5 pb-4 sm:p-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                Edit Expense
+                            </h3>
+
+                            <input x-model="editingExpense.title" name="title" type="text"
+                                class="w-full mb-3 p-2 border rounded" placeholder="Expense Title">
+
+                            <input x-model="editingExpense.description" name="description" type="text"
+                                class="w-full mb-3 p-2 border rounded" placeholder="Description">
+
+                            <input x-model="editingExpense.amount" name="amount" type="number"
+                                class="w-full mb-3 p-2 border rounded" placeholder="Amount">
+
+                            <input x-model="editingExpense.category" name="category" type="text"
+                                class="w-full mb-3 p-2 border rounded" placeholder="Category">
+
+                            <input x-model="editingExpense.spent_at" name="spent_at" type="date"
+                                class="w-full mb-3 p-2 border rounded">
+
+                            <textarea x-model="editingExpense.notes" name="notes"
+                                class="w-full mb-3 p-2 border rounded"
+                                placeholder="Notes"></textarea>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-end gap-2">
+                            <button type="button"
+                                @click="showEditModal = false"
+                                class="px-4 py-2 bg-gray-300 rounded">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white rounded">
+                                Update
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
         </div>
+
     </div>
 
     {{-- <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">

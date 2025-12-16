@@ -1,4 +1,12 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  The file below contains project-specific component and utility styles.
+  We keep the original custom rules after the Tailwind directives so they
+  are available alongside generated utilities.
+*/
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -24,7 +32,7 @@
     .bg-sidebar {
         background-color: hsl(var(--sidebar-background));
     }
-    
+
     .bg-sidebar-accent {
         background-color: hsl(var(--sidebar-accent));
     }

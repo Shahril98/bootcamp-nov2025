@@ -4,19 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Expense;
+use Illuminate\Support\Facades\Auth;
 
 class ExpenseController extends Controller
 {
     public function index()
     {
         return view('dashboard', [
-            'expenses' => Expense::all()
+            'expenses' => Auth::user()->expenses
         ]);
     }
     public function store(Request $request)
     {
         //Validate all required fields
         $validated = $request->validate([
+            // 'user_id' => auth()->user()->id,
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'amount' => 'required|numeric',
@@ -24,7 +26,8 @@ class ExpenseController extends Controller
             'spent_at' => 'required|date',
             'notes' => 'nullable|string',
         ]);
-
+        //Add the authenticated user's ID to the validated data
+        $validated['user_id'] = auth()->id;
         //Create the expense using validate data
         Expense::create($validated);
 

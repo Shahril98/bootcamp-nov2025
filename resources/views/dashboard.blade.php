@@ -30,7 +30,12 @@
         }
     </script>
 
-    <div x-data="expensesComponent()">
+    <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Dashboard')}}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Welcome to the dashboard') }}</p>
+        </div>
+
+    <div x-data="expensesComponent()" class="max-w-xl mx-auto">
         {{-- Success Message --}}
         @if (session('success'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
@@ -51,57 +56,52 @@
             </div>
         @endif
 
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Dashboard')}}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Welcome to the dashboard') }}</p>
-        </div>
-
         <!-- Expense Form -->
-        <div
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 mb-6">
-            <h1 class="text-lg font-bold gap-6">Expenses Form</h1>
+        <div class="max-w-xl mx-auto">
+            <div class="bg-white dark:bg-gray-400 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 mb-6">
+                <h1 class="text-lg font-bold gap-6">Expenses Form</h1>
 
-            <form action="{{ route('expenses.store')}}" method="POST">
-                @csrf
-                <input name="title" type="text" placeholder="Expense Title"
-                    class="w-full mb-4 p-2 border border-gray-300 rounded">
-                <input name="description" type="text" placeholder="Description"
-                    class="w-full mb-4 p-2 border border-gray-300 rounded">
-                <input type="number" name="amount" placeholder="Amount"
-                    class="w-full mb-4 p-2 border border-gray-300 rounded">
-                <input name="category" type="text" placeholder="Category"
-                    class="w-full mb-4 p-2 border border-gray-300 rounded">
-                <input type="date" name="spent_at" placeholder="Date Spend At"
-                    class="w-full mb-4 p-2 border border-gray-300 rounded">
-                <textarea name="notes" placeholder="Notes"
-                    class="w-full mb-4 p-2 border border-gray-300 rounded"></textarea>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
-            </form>
-
-            @foreach ($expenses as $expense)
-                <div class="mt-4 p-4 border border-gray-300 rounded">
-                    <h2 class="text-lg font-bold">{{ $expense->title }}</h2>
-                    <p>{{ $expense->description }}</p>
-                    <p>Amount: RM {{ $expense->amount }}</p>
-                    <p>Category: {{ $expense->category }}</p>
-                    <p>Spent At: {{ $expense->spent_at->format('Y-m-d') }}</p>
-                    <p>Notes: {{ $expense->notes }}</p>
-                </div>
-
-                <div class="mt-2 flex items-center">
-                    <form action="{{route('expenses.destroy', $expense)}}" method="POST">
+                    <form action="{{ route('expenses.store')}}" method="POST">
                         @csrf
-                        @method('DELETE')
-                        <button type="submit" class="bg-blue-500 text-white px-2 py-2 rounded">Delete</button>
+                        <input name="title" type="text" placeholder="Expense Title"
+                            class="w-full mb-4 p-2 border border-gray-300 rounded">
+                        <input name="description" type="text" placeholder="Description"
+                            class="w-full mb-4 p-2 border border-gray-300 rounded">
+                        <input type="number" name="amount" placeholder="Amount"
+                            class="w-full mb-4 p-2 border border-gray-300 rounded">
+                        <input name="category" type="text" placeholder="Category"
+                            class="w-full mb-4 p-2 border border-gray-300 rounded">
+                        <input type="date" name="spent_at" placeholder="Date Spend At"
+                            class="w-full mb-4 p-2 border border-gray-300 rounded">
+                        <textarea name="notes" placeholder="Notes"
+                            class="w-full mb-4 p-2 border border-gray-300 rounded"></textarea>
+                        <x-button type="submit" variant="success">Save Expenses</x-button>
                     </form>
 
-                    <button @click="openEditModal({{ $expense }})" class="ml-2 bg-blue-500 text-white px-2 py-2 rounded">
-                        Edit
-                    </button>
-                </div>
+                    @foreach ($expenses as $expense)
+                        <div class="mt-4 p-4 border border-gray-300 rounded">
+                            <h2 class="text-lg font-bold">{{ $expense->title }}</h2>
+                            <p>{{ $expense->description }}</p>
+                            <p>Amount: RM {{ $expense->amount }}</p>
+                            <p>Category: {{ $expense->category }}</p>
+                            <p>Spent At: {{ $expense->spent_at->format('Y-m-d') }}</p>
+                            <p>Notes: {{ $expense->notes }}</p>
+                        </div>
 
-            @endforeach
+                        <div class="mt-2 flex items-center">
+                            <form action="{{route('expenses.destroy', $expense)}}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <x-button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow-md transition duration-150 ease-in-out">Delete</x-button>
+                            </form>
 
+                            <button @click="openEditModal({{ $expense }})" class="ml-2 bg-blue-500 text-white px-2 py-2 rounded">
+                                Edit
+                            </button>
+                        </div>
+
+                    @endforeach
+            </div>
         </div>
 
         {{-- <!-- Edit Modal -->
